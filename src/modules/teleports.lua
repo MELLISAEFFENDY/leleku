@@ -17,7 +17,7 @@ end)
 if success and utilsResult then
     Utils = utilsResult
 else
-    -- Basic fallback Utils
+    -- Complete fallback Utils with all required functions
     Utils = {
         CreateNotification = function(text, duration)
             print("[NOTIFICATION]", text)
@@ -33,9 +33,22 @@ else
         GetPlayerNames = function()
             local names = {}
             for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                table.insert(names, player.Name)
+                if player ~= game:GetService("Players").LocalPlayer then
+                    table.insert(names, player.Name)
+                end
             end
             return names
+        end,
+        TeleportToPlayer = function(playerName)
+            local targetPlayer = game:GetService("Players"):FindFirstChild(playerName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local character = game:GetService("Players").LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+                    return true
+                end
+            end
+            return false
         end
     }
 end
