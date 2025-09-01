@@ -110,12 +110,12 @@ end
 local Players = game:GetService('Players')
 
 -- Create teleport functions for UI
-function Teleports.CreateTeleportSection(window)
+function Teleports.CreateTeleportSection(tab)
     -- Teleports Section
-    window:Section('🌍 Zone Teleportation')
+    tab:Section('🌍 Zone Teleportation')
     
     -- Zone Teleports
-    local zoneDropdown = window:Dropdown('Zone Teleports', {
+    local zoneDropdown = tab:Dropdown('Zone Teleports', {
         list = Locations.GetZoneNames(),
         callback = function(selected)
             -- Store selected zone
@@ -123,7 +123,7 @@ function Teleports.CreateTeleportSection(window)
         end
     })
     
-    window:Button('Teleport to Zone', function()
+    tab:Button('Teleport to Zone', function()
         if Teleports.selectedZone then
             local cframe = Locations.TeleportLocations.Zones[Teleports.selectedZone]
             if cframe then
@@ -139,9 +139,9 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- Enhanced Fast Travel System
-    window:Section('🚢 Fast Travel & NPCs')
+    tab:Section('🚢 Fast Travel & NPCs')
     
-    window:Button('Use Sea Traveler', function()
+    tab:Button('Use Sea Traveler', function()
         pcall(function()
             if workspace:FindFirstChild("Sea Traveler") and 
                workspace["Sea Traveler"]:FindFirstChild("seatraveler") then
@@ -154,7 +154,7 @@ function Teleports.CreateTeleportSection(window)
         end)
     end)
     
-    window:Button('Toggle Fast Travel UI', function()
+    tab:Button('Toggle Fast Travel UI', function()
         pcall(function()
             game:GetService("ReplicatedStorage").packages.Net.RE["FastTravel/ToggleUI"]:FireServer()
             Utils.CreateNotification("🌟 Fast Travel UI toggled", 2)
@@ -162,9 +162,9 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- NPC Teleports
-    window:Section('👥 NPC Locations')
+    tab:Section('👥 NPC Locations')
     
-    local npcDropdown = window:Dropdown('Teleport to NPC', {
+    local npcDropdown = tab:Dropdown('Teleport to NPC', {
         list = {
             "Pierre (Quests)",
             "Phineas (Quests)", 
@@ -180,7 +180,7 @@ function Teleports.CreateTeleportSection(window)
         end
     })
     
-    window:Button('Teleport to NPC', function()
+    tab:Button('Teleport to NPC', function()
         if Teleports.selectedNPC then
             Teleports.TeleportToNPC(Teleports.selectedNPC)
         else
@@ -189,16 +189,16 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- Rod Teleports
-    window:Section('🎣 Rod Locations')
+    tab:Section('🎣 Rod Locations')
     
-    local rodDropdown = window:Dropdown('Rod Locations', {
+    local rodDropdown = tab:Dropdown('Rod Locations', {
         list = Locations.GetRodNames(),
         callback = function(selected)
             Teleports.selectedRod = selected
         end
     })
     
-    window:Button('Teleport to Rod', function()
+    tab:Button('Teleport to Rod', function()
         if Teleports.selectedRod then
             local cframe = Locations.TeleportLocations.Rods[Teleports.selectedRod]
             if cframe then
@@ -214,14 +214,14 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- NPC Teleports
-    local npcDropdown = window:Dropdown('NPC Locations', {
+    local npcDropdown = tab:Dropdown('NPC Locations', {
         list = Locations.GetNPCNames(),
         callback = function(selected)
             Teleports.selectedNPC = selected
         end
     })
     
-    window:Button('Teleport to NPC', function()
+    tab:Button('Teleport to NPC', function()
         if Teleports.selectedNPC then
             local cframe = Locations.TeleportLocations.NPCs[Teleports.selectedNPC]
             if cframe then
@@ -237,16 +237,16 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- Player Teleports
-    window:Section('👥 Player Teleportation')
+    tab:Section('👥 Player Teleportation')
     
-    local playerDropdown = window:Dropdown('Players', {
+    local playerDropdown = tab:Dropdown('Players', {
         list = Utils.GetPlayerNames(),
         callback = function(selected)
             Teleports.selectedPlayer = selected
         end
     })
     
-    window:Button('Teleport to Player', function()
+    tab:Button('Teleport to Player', function()
         if Teleports.selectedPlayer then
             if Utils.TeleportToPlayer(Teleports.selectedPlayer) then
                 Utils.CreateNotification("Teleported to " .. Teleports.selectedPlayer, 3)
@@ -262,7 +262,7 @@ function Teleports.CreateTeleportSection(window)
     Players.PlayerAdded:Connect(function()
         -- Update dropdown list
         playerDropdown.Frame:Destroy()
-        playerDropdown = window:Dropdown('Players', {
+        playerDropdown = tab:Dropdown('Players', {
             list = Utils.GetPlayerNames(),
             callback = function(selected)
                 Teleports.selectedPlayer = selected
@@ -273,7 +273,7 @@ function Teleports.CreateTeleportSection(window)
     Players.PlayerRemoving:Connect(function()
         -- Update dropdown list
         playerDropdown.Frame:Destroy()
-        playerDropdown = window:Dropdown('Players', {
+        playerDropdown = tab:Dropdown('Players', {
             list = Utils.GetPlayerNames(),
             callback = function(selected)
                 Teleports.selectedPlayer = selected
@@ -282,23 +282,23 @@ function Teleports.CreateTeleportSection(window)
     end)
     
     -- Quick Teleports
-    window:Section('⚡ Quick Teleports')
+    tab:Section('⚡ Quick Teleports')
     
-    window:Button('Teleport to Spawn', function()
+    tab:Button('Teleport to Spawn', function()
         local spawnCFrame = CFrame.new(379.875458, 134.500519, 233.5495)
         if Utils.TeleportTo(spawnCFrame) then
             Utils.CreateNotification("Teleported to spawn", 3)
         end
     end)
     
-    window:Button('Teleport to Depths', function()
+    tab:Button('Teleport to Depths', function()
         local depthsCFrame = Locations.TeleportLocations.Zones['Depths']
         if Utils.TeleportTo(depthsCFrame) then
             Utils.CreateNotification("Teleported to The Depths", 3)
         end
     end)
     
-    window:Button('Teleport to Altar', function()
+    tab:Button('Teleport to Altar', function()
         local altarCFrame = Locations.TeleportLocations.Items['Enchated Altar']
         if Utils.TeleportTo(altarCFrame) then
             Utils.CreateNotification("Teleported to Enchanted Altar", 3)
