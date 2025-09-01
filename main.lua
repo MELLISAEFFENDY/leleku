@@ -41,7 +41,14 @@ if success and result then
     print("✅ Automation Module loaded successfully")
 else
     warn("❌ Failed to load Automation Module:", tostring(result))
-    return
+    -- Create minimal automation fallback
+    Automation = {
+        CreateAutomationSection = function(window, flags)
+            window:Section('🎣 Fishing Automation (Limited)')
+            window:Label('Automation module failed to load - please try again')
+        end
+    }
+    print("⚠️ Using limited Automation fallback")
 end
 
 -- Load Teleports
@@ -55,7 +62,14 @@ if success and result then
     print("✅ Teleports Module loaded successfully")
 else
     warn("❌ Failed to load Teleports Module:", tostring(result))
-    return
+    -- Create minimal teleports fallback
+    Teleports = {
+        CreateTeleportSection = function(window)
+            window:Section('🌍 Teleportation (Limited)')
+            window:Label('Teleport module failed to load - basic functionality only')
+        end
+    }
+    print("⚠️ Using limited Teleports fallback")
 end
 
 -- Load Utils
@@ -69,7 +83,13 @@ if success and result then
     print("✅ Utility Functions loaded successfully")
 else
     warn("❌ Failed to load Utility Functions:", tostring(result))
-    return
+    -- Create minimal utils fallback
+    Utils = {
+        CreateNotification = function(text, duration)
+            print("[NOTIFICATION]", text)
+        end
+    }
+    print("⚠️ Using limited Utils fallback")
 end
 
 print("🚀 All modules loaded successfully! Initializing UI...")
