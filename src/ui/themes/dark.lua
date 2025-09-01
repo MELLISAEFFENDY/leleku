@@ -56,7 +56,7 @@ Theme.Fonts = {
     Primary = Enum.Font.GothamMedium,
     Secondary = Enum.Font.Gotham,
     Bold = Enum.Font.GothamBold,
-    Light = Enum.Font.GothamLight
+    Light = Enum.Font.Gotham
 }
 
 -- Size Settings
