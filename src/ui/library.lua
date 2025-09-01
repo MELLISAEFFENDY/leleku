@@ -84,8 +84,52 @@ end)
 if componentsSuccess and componentsResult then
     Components = componentsResult
 else
-    -- Basic fallback components
-    Components = {}
+    -- Complete fallback components
+    Components = {
+        CreateRoundedFrame = function(parent, options)
+            local frame = Instance.new("Frame")
+            frame.Name = options.Name or "Frame"
+            frame.Size = options.Size or UDim2.new(1, 0, 1, 0)
+            frame.Position = options.Position or UDim2.new(0, 0, 0, 0)
+            frame.BackgroundColor3 = options.BackgroundColor3 or Color3.fromRGB(25, 25, 30)
+            frame.BorderSizePixel = 0
+            frame.Parent = parent
+            
+            -- Add corner radius
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, options.CornerRadius or 6)
+            corner.Parent = frame
+            
+            -- Add stroke if requested
+            if options.Stroke then
+                local stroke = Instance.new("UIStroke")
+                stroke.Color = Color3.fromRGB(40, 40, 45)
+                stroke.Thickness = 1
+                stroke.Parent = frame
+            end
+            
+            return frame
+        end,
+        CreateButton = function(parent, options)
+            local button = Instance.new("TextButton")
+            button.Name = options.Name or "Button"
+            button.Size = options.Size or UDim2.new(1, 0, 0, 30)
+            button.Position = options.Position or UDim2.new(0, 0, 0, 0)
+            button.BackgroundColor3 = options.BackgroundColor3 or Color3.fromRGB(88, 101, 242)
+            button.Text = options.Text or "Button"
+            button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            button.Font = Enum.Font.GothamMedium
+            button.TextSize = 14
+            button.BorderSizePixel = 0
+            button.Parent = parent
+            
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 6)
+            corner.Parent = button
+            
+            return button
+        end
+    }
 end
 
 local Players = game:GetService("Players")
@@ -346,137 +390,94 @@ end
 
 -- Library functions
 function Library:CreateWindow(name, options)
-    options = options or {}
+    local success, result = pcall(function()
+        options = options or {}
+        
+        if not LibraryState.MainContainer then
+            createMainContainer()
+        end
+        
+        local windowFrame = Components.CreateRoundedFrame(LibraryState.MainContainer, {
+            Name = "Window_" .. name,
+            Size = options.Size or UDim2.new(0, 450, 0, 400),
+            Position = options.Position or UDim2.new(0, 50, 0, 50),
+            BackgroundColor3 = Theme.Colors.Background,
+            Stroke = true,
+            Shadow = true
+        })
+        
+        -- Title bar
+        local titleBar = Components.CreateRoundedFrame(windowFrame, {
+            Name = "TitleBar",
+            Size = UDim2.new(1, 0, 0, Theme.Sizes.WindowTitleHeight),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundColor3 = Theme.Colors.Surface,
+            CornerRadius = Theme.Sizes.BorderRadius
+        })
+        
+        -- Window title
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Name = "TitleLabel"
+        titleLabel.Parent = titleBar
+        titleLabel.Size = UDim2.new(1, -80, 1, 0)
+        titleLabel.Position = UDim2.new(0, Theme.Sizes.PaddingNormal, 0, 0)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = name
+        titleLabel.TextColor3 = Theme.Colors.TextPrimary
+        titleLabel.TextSize = Theme.Sizes.TextSizeTitle
+        titleLabel.Font = Theme.Fonts.Bold
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Content area
+        local contentFrame = Instance.new("ScrollingFrame")
+        contentFrame.Name = "ContentFrame"
+        contentFrame.Parent = windowFrame
+        contentFrame.Size = UDim2.new(1, 0, 1, -Theme.Sizes.WindowTitleHeight)
+        contentFrame.Position = UDim2.new(0, 0, 0, Theme.Sizes.WindowTitleHeight)
+        contentFrame.BackgroundTransparency = 1
+        contentFrame.BorderSizePixel = 0
+        contentFrame.ScrollBarThickness = 4
+        contentFrame.ScrollBarImageColor3 = Theme.Colors.Primary
+        contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        
+        -- Content layout
+        local contentLayout = Instance.new("UIListLayout")
+        contentLayout.Name = "ContentLayout"
+        contentLayout.Parent = contentFrame
+        contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        contentLayout.Padding = UDim.new(0, Theme.Sizes.PaddingSmall)
+        
+        -- Create window object
+        local window = setmetatable({
+            Name = name,
+            WindowFrame = windowFrame,
+            TitleBar = titleBar,
+            ContentFrame = contentFrame,
+            ContentLayout = contentLayout,
+            Options = options
+        }, Window)
+        
+        LibraryState.Windows[name] = window
+        
+        return window
+    end)
     
-    if not LibraryState.MainContainer then
-        createMainContainer()
+    if success then
+        return result
+    else
+        warn("Failed to create window:", name, "Error:", tostring(result))
+        -- Return a minimal fallback window
+        return {
+            Name = name,
+            Section = function() end,
+            Toggle = function() end,
+            Button = function() end,
+            Dropdown = function() end,
+            Label = function() end,
+            Close = function() end,
+            Minimize = function() end
+        }
     end
-    
-    local windowFrame = Components.CreateRoundedFrame(LibraryState.MainContainer, {
-        Name = "Window_" .. name,
-        Size = options.Size or UDim2.new(0, 450, 0, 400),
-        Position = options.Position or UDim2.new(0, 50, 0, 50),
-        BackgroundColor3 = Theme.Colors.Background,
-        Stroke = true,
-        Shadow = true
-    })
-    
-    -- Title bar
-    local titleBar = Components.CreateRoundedFrame(windowFrame, {
-        Name = "TitleBar",
-        Size = UDim2.new(1, 0, 0, Theme.Sizes.WindowTitleHeight),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = Theme.Colors.Surface,
-        CornerRadius = Theme.Sizes.BorderRadius
-    })
-    
-    -- Window title
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "TitleLabel"
-    titleLabel.Parent = titleBar
-    titleLabel.Size = UDim2.new(1, -80, 1, 0)
-    titleLabel.Position = UDim2.new(0, Theme.Sizes.PaddingNormal, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = name
-    titleLabel.TextColor3 = Theme.Colors.TextPrimary
-    titleLabel.TextSize = Theme.Sizes.TextSizeTitle
-    titleLabel.Font = Theme.Fonts.Bold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    
-    -- Close button
-    local closeButton = Components.CreateButton(titleBar, {
-        Name = "CloseButton",
-        Size = UDim2.new(0, 25, 0, 25),
-        Position = UDim2.new(1, -30, 0.5, -12.5),
-        Text = "✕",
-        BackgroundColor3 = Theme.Colors.Error,
-        HoverColor = Color3.fromRGB(255, 100, 100),
-        TextSize = 12,
-        Callback = function()
-            LibraryState.Windows[name]:Close()
-        end
-    })
-    
-    -- Minimize button
-    local minimizeButton = Components.CreateButton(titleBar, {
-        Name = "MinimizeButton",
-        Size = UDim2.new(0, 25, 0, 25),
-        Position = UDim2.new(1, -60, 0.5, -12.5),
-        Text = "─",
-        BackgroundColor3 = Theme.Colors.Warning,
-        HoverColor = Color3.fromRGB(255, 200, 100),
-        TextSize = 12,
-        Callback = function()
-            Library:MinimizeAll()
-        end
-    })
-    
-    -- Content area
-    local contentFrame = Instance.new("ScrollingFrame")
-    contentFrame.Name = "ContentFrame"
-    contentFrame.Parent = windowFrame
-    contentFrame.Size = UDim2.new(1, 0, 1, -Theme.Sizes.WindowTitleHeight)
-    contentFrame.Position = UDim2.new(0, 0, 0, Theme.Sizes.WindowTitleHeight)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.BorderSizePixel = 0
-    contentFrame.ScrollBarThickness = 4
-    contentFrame.ScrollBarImageColor3 = Theme.Colors.Primary
-    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    
-    -- Content layout
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.Name = "ContentLayout"
-    contentLayout.Parent = contentFrame
-    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = UDim.new(0, Theme.Sizes.PaddingSmall)
-    
-    -- Content padding
-    local contentPadding = Instance.new("UIPadding")
-    contentPadding.PaddingLeft = UDim.new(0, Theme.Sizes.PaddingNormal)
-    contentPadding.PaddingRight = UDim.new(0, Theme.Sizes.PaddingNormal)
-    contentPadding.PaddingTop = UDim.new(0, Theme.Sizes.PaddingNormal)
-    contentPadding.PaddingBottom = UDim.new(0, Theme.Sizes.PaddingNormal)
-    contentPadding.Parent = contentFrame
-    
-    -- Make window draggable
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-    
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = windowFrame.Position
-        end
-    end)
-    
-    titleBar.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            windowFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    
-    titleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    -- Create window object
-    local window = setmetatable({
-        Name = name,
-        WindowFrame = windowFrame,
-        TitleBar = titleBar,
-        ContentFrame = contentFrame,
-        ContentLayout = contentLayout,
-        Options = options
-    }, Window)
-    
-    LibraryState.Windows[name] = window
-    
-    return window
 end
 
 function Library:MinimizeAll()
