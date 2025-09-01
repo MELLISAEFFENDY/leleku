@@ -23,7 +23,60 @@ if success and result then
     print("✅ Tabbed UI Library loaded successfully")
 else
     warn("❌ Failed to load Tabbed UI Library:", tostring(result))
-    return
+    
+    -- Create ultra-minimal fallback UI
+    print("🔄 Creating minimal fallback UI...")
+    TabbedLibrary = {
+        CreateWindow = function(self, title)
+            local screenGui = Instance.new("ScreenGui")
+            screenGui.Name = "FallbackUI"
+            screenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+            
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(0, 400, 0, 300)
+            frame.Position = UDim2.new(0.5, -200, 0.5, -150)
+            frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+            frame.BorderSizePixel = 0
+            frame.Parent = screenGui
+            
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 8)
+            corner.Parent = frame
+            
+            local titleLabel = Instance.new("TextLabel")
+            titleLabel.Size = UDim2.new(1, 0, 0, 30)
+            titleLabel.BackgroundTransparency = 1
+            titleLabel.Text = title or "Fallback UI"
+            titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            titleLabel.TextSize = 16
+            titleLabel.Font = Enum.Font.SourceSansBold
+            titleLabel.Parent = frame
+            
+            local errorLabel = Instance.new("TextLabel")
+            errorLabel.Size = UDim2.new(1, -20, 1, -50)
+            errorLabel.Position = UDim2.new(0, 10, 0, 40)
+            errorLabel.BackgroundTransparency = 1
+            errorLabel.Text = "UI Library failed to load. Please check your internet connection and try again.\n\nError details in console (F9)"
+            errorLabel.TextColor3 = Color3.fromRGB(255, 200, 200)
+            errorLabel.TextSize = 14
+            errorLabel.Font = Enum.Font.SourceSans
+            errorLabel.TextWrapped = true
+            errorLabel.TextYAlignment = Enum.TextYAlignment.Top
+            errorLabel.Parent = frame
+            
+            return self
+        end,
+        CreateTab = function(self, name, icon)
+            return {
+                Section = function() end,
+                Toggle = function() end,
+                Button = function() end,
+                Dropdown = function() end,
+                Label = function() end
+            }
+        end
+    }
+    print("⚠️ Using minimal fallback UI - limited functionality")
 end
 
 -- Load Automation
