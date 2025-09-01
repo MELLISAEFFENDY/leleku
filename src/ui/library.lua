@@ -9,8 +9,84 @@
 ]]--
 
 local Library = {}
-local Theme = require(script.Parent.themes.dark)
-local Components = require(script.Parent.components.modern)
+
+-- Load theme directly from GitHub when script is loaded via loadstring
+local Theme
+local Components
+
+-- Try to load theme, fallback to inline theme if fails
+local success, themeResult = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/ui/themes/dark.lua'))()
+end)
+
+if success and themeResult then
+    Theme = themeResult
+else
+    -- Fallback inline theme
+    Theme = {
+        Colors = {
+            Background = Color3.fromRGB(20, 20, 25),
+            Surface = Color3.fromRGB(25, 25, 30),
+            SurfaceLight = Color3.fromRGB(30, 30, 35),
+            Primary = Color3.fromRGB(88, 101, 242),
+            PrimaryHover = Color3.fromRGB(98, 111, 252),
+            PrimaryActive = Color3.fromRGB(78, 91, 232),
+            TextPrimary = Color3.fromRGB(255, 255, 255),
+            TextSecondary = Color3.fromRGB(185, 187, 190),
+            TextMuted = Color3.fromRGB(115, 118, 123),
+            Border = Color3.fromRGB(40, 40, 45),
+            BorderLight = Color3.fromRGB(50, 50, 55),
+            Success = Color3.fromRGB(67, 181, 129),
+            Warning = Color3.fromRGB(250, 166, 26),
+            Error = Color3.fromRGB(237, 66, 69),
+            Hover = Color3.fromRGB(35, 35, 40),
+            Active = Color3.fromRGB(45, 45, 50),
+            Disabled = Color3.fromRGB(60, 60, 65)
+        },
+        Sizes = {
+            WindowMinWidth = 400,
+            WindowMinHeight = 300,
+            WindowTitleHeight = 35,
+            ButtonHeight = 30,
+            ButtonPadding = 8,
+            TextSizeSmall = 12,
+            TextSizeNormal = 14,
+            TextSizeLarge = 16,
+            TextSizeTitle = 18,
+            PaddingSmall = 4,
+            PaddingNormal = 8,
+            PaddingLarge = 12,
+            PaddingXLarge = 16,
+            BorderRadius = 6,
+            BorderWidth = 1,
+            FloatingButtonSize = 50,
+            FloatingButtonRadius = 25
+        },
+        Animations = {
+            Speed = 0.25,
+            EasingStyle = Enum.EasingStyle.Quad,
+            EasingDirection = Enum.EasingDirection.Out
+        },
+        Fonts = {
+            Primary = Enum.Font.GothamMedium,
+            Secondary = Enum.Font.Gotham,
+            Bold = Enum.Font.GothamBold,
+            Light = Enum.Font.GothamLight
+        }
+    }
+end
+
+-- Try to load components, fallback if fails
+local componentsSuccess, componentsResult = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/ui/components/modern.lua'))()
+end)
+
+if componentsSuccess and componentsResult then
+    Components = componentsResult
+else
+    -- Basic fallback components
+    Components = {}
+end
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")

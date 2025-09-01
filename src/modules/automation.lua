@@ -5,8 +5,51 @@
 
 local Automation = {}
 
--- Dependencies
-local Utils = require(script.Parent.Parent.utils.functions)
+-- Dependencies - Load Utils directly from GitHub when using loadstring
+local Utils
+local success, utilsResult = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/utils/functions.lua'))()
+end)
+
+if success and utilsResult then
+    Utils = utilsResult
+else
+    -- Basic fallback Utils
+    Utils = {
+        CreateNotification = function(text, duration)
+            print("[NOTIFICATION]", text)
+        end,
+        GetCharacter = function()
+            return game:GetService("Players").LocalPlayer.Character
+        end,
+        GetHumanoidRootPart = function()
+            local character = game:GetService("Players").LocalPlayer.Character
+            return character and character:FindFirstChild("HumanoidRootPart")
+        end,
+        FindRod = function()
+            local character = game:GetService("Players").LocalPlayer.Character
+            if not character then return nil end
+            
+            for _, item in pairs(character:GetChildren()) do
+                if item:IsA("Tool") and item.Name:lower():find("rod") then
+                    return item
+                end
+            end
+            return nil
+        end,
+        FindChild = function(parent, childName)
+            return parent:FindFirstChild(childName)
+        end,
+        TeleportTo = function(cframe)
+            local character = game:GetService("Players").LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = cframe
+                return true
+            end
+            return false
+        end
+    }
+end
 
 -- Services
 local Players = game:GetService('Players')

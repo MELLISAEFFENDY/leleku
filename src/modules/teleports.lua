@@ -5,9 +5,71 @@
 
 local Teleports = {}
 
--- Dependencies
-local Utils = require(script.Parent.Parent.utils.functions)
-local Locations = require(script.Parent.Parent.data.locations)
+-- Dependencies - Load from GitHub when using loadstring
+local Utils
+local Locations
+
+-- Load Utils
+local success, utilsResult = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/utils/functions.lua'))()
+end)
+
+if success and utilsResult then
+    Utils = utilsResult
+else
+    -- Basic fallback Utils
+    Utils = {
+        CreateNotification = function(text, duration)
+            print("[NOTIFICATION]", text)
+        end,
+        TeleportTo = function(cframe)
+            local character = game:GetService("Players").LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = cframe
+                return true
+            end
+            return false
+        end,
+        GetPlayerNames = function()
+            local names = {}
+            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                table.insert(names, player.Name)
+            end
+            return names
+        end
+    }
+end
+
+-- Load Locations
+local locSuccess, locResult = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/data/locations.lua'))()
+end)
+
+if locSuccess and locResult then
+    Locations = locResult
+else
+    -- Basic fallback Locations
+    Locations = {
+        GetZoneNames = function()
+            return {"Roslit Bay", "The Depths", "Ancient Isle", "Vertigo", "Snowcap Island"}
+        end,
+        GetRodNames = function()
+            return {"Training Rod", "Plastic Rod", "Lucky Rod", "Carbon Rod", "Long Rod"}
+        end,
+        TeleportLocations = {
+            Zones = {
+                ["Roslit Bay"] = CFrame.new(379.875, 134.5, 233.5),
+                ["The Depths"] = CFrame.new(-1805.02, -143.47, 1563.37),
+                ["Ancient Isle"] = CFrame.new(5208.81, 155.28, 401.76),
+                ["Vertigo"] = CFrame.new(-113.66, -511.86, 1061.31),
+                ["Snowcap Island"] = CFrame.new(2648.83, 139.85, 2522.86)
+            },
+            Rods = {},
+            NPCs = {},
+            Items = {}
+        }
+    }
+end
 
 -- Services
 local Players = game:GetService('Players')
