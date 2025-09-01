@@ -102,7 +102,7 @@ function Automation.CreateAutomationSection(window, flags)
     Automation.StartAutomationLoop()
 end
 
--- Main automation loop
+-- Main automation loop (Enhanced)
 function Automation.StartAutomationLoop()
     if connections.automationLoop then
         connections.automationLoop:Disconnect()
@@ -143,7 +143,7 @@ function Automation.StartAutomationLoop()
             automationState.characterposition = nil
         end
         
-        -- Auto Shake Logic
+        -- Enhanced Auto Shake Logic
         if automationState.autoshake then
             local playerGui = LocalPlayer.PlayerGui
             if Utils.FindChild(playerGui, 'shakeui') then
@@ -159,22 +159,60 @@ function Automation.StartAutomationLoop()
             end
         end
         
-        -- Auto Cast Logic
+        -- Enhanced Auto Cast Logic with new remotes
         if automationState.autocast then
-            local rod = Utils.FindRod()
-            if rod ~= nil and rod.values.lure.Value <= 0.001 then
-                task.wait(0.5)
-                rod.events.cast:FireServer(100, 1)
-            end
+            Automation.EnhancedAutoFishing()
         end
         
-        -- Auto Reel Logic
+        -- Traditional Auto Reel (backup method)
         if automationState.autoreel then
             local rod = Utils.FindRod()
             if rod ~= nil and rod.values.lure.Value == 100 then
                 task.wait(0.5)
-                ReplicatedStorage.events.reelfinished:FireServer(100, true)
+                if ReplicatedStorage.events:FindFirstChild("reelfinished") then
+                    ReplicatedStorage.events.reelfinished:FireServer(100, true)
+                else
+                    -- Fallback method
+                    rod.events.catchfinish:FireServer(100, true)
+                end
             end
+        end
+        
+        -- Auto Equip Best Rod
+        if automationState.autoequiprod then
+            task.spawn(function()
+                task.wait(5) -- Check every 5 seconds
+                Automation.EquipBestRod()
+            end)
+        end
+        
+        -- Auto Equip Bait
+        if automationState.autoequipbait then
+            task.spawn(function()
+                task.wait(10) -- Check every 10 seconds
+                Automation.AutoEquipBait()
+            end)
+        end
+        
+        -- Auto Enchant Rod
+        if automationState.autoenchantrod then
+            task.spawn(function()
+                task.wait(30) -- Check every 30 seconds
+                local rod = Utils.FindRod()
+                if rod then
+                    pcall(function()
+                        ReplicatedStorage.events.enchantrod:InvokeServer(rod.Name)
+                    end)
+                end
+            end)
+        end
+        
+        -- Auto Currency Management
+        if automationState.autobuyupgrades then
+            task.spawn(function()
+                task.wait(60) -- Check every minute
+                Automation.AutoCurrencyManagement()
+            end)
         end
     end)
 end
@@ -183,7 +221,7 @@ end
 function Automation.CreateAdvancedSection(window, flags)
     window:Section('⚙️ Advanced Automation')
     
-    -- Auto Sell Fish
+    -- Auto Sell Fish (Updated with new remotes)
     window:Toggle('Auto Sell Fish', {
         location = flags,
         flag = 'autosell',
@@ -192,23 +230,81 @@ function Automation.CreateAdvancedSection(window, flags)
             automationState.autosell = value
             if value then
                 Automation.StartAutoSell()
+                Utils.CreateNotification("Auto Sell enabled", 2)
             else
                 Automation.StopAutoSell()
+                Utils.CreateNotification("Auto Sell disabled", 2)
             end
         end
     })
     
-    -- Auto Buy Bait
-    window:Toggle('Auto Buy Bait', {
+    window:Button('Sell Everything Now', function()
+        pcall(function()
+            ReplicatedStorage.events.selleverything:InvokeServer()
+            Utils.CreateNotification("💰 Sold all items!", 2)
+        end)
+    end)
+    
+    -- Anti-AFK System
+    window:Toggle('Anti-AFK', {
         location = flags,
-        flag = 'autobuybait',
+        flag = 'antiafk',
         default = false,
         callback = function(value)
-            automationState.autobuybait = value
+            automationState.antiafk = value
+            if value then
+                Automation.StartAntiAFK()
+                Utils.CreateNotification("Anti-AFK enabled", 2)
+            else
+                Automation.StopAntiAFK()
+                Utils.CreateNotification("Anti-AFK disabled", 2)
+            end
         end
     })
     
-    -- Auto Equip Best Rod
+    -- Auto Enchant System
+    window:Toggle('Auto Enchant Rod', {
+        location = flags,
+        flag = 'autoenchantrod',
+        default = false,
+        callback = function(value)
+            automationState.autoenchantrod = value
+            if value then
+                Utils.CreateNotification("Auto Enchant Rod enabled", 2)
+            else
+                Utils.CreateNotification("Auto Enchant Rod disabled", 2)
+            end
+        end
+    })
+    
+    window:Button('Enchant Current Rod', function()
+        pcall(function()
+            local rod = Utils.FindRod()
+            if rod then
+                ReplicatedStorage.events.enchantrod:InvokeServer(rod.Name)
+                Utils.CreateNotification("✨ Enhanced fishing rod!", 2)
+            else
+                Utils.CreateNotification("❌ No rod equipped!", 2)
+            end
+        end)
+    end)
+    
+    -- Auto Buy/Equip Bait
+    window:Toggle('Auto Equip Bait', {
+        location = flags,
+        flag = 'autoequipbait',
+        default = false,
+        callback = function(value)
+            automationState.autoequipbait = value
+            if value then
+                Utils.CreateNotification("Auto Equip Bait enabled", 2)
+            else
+                Utils.CreateNotification("Auto Equip Bait disabled", 2)
+            end
+        end
+    })
+    
+    -- Auto Equip Best Rod (Enhanced)
     window:Toggle('Auto Equip Best Rod', {
         location = flags,
         flag = 'autoequiprod',
@@ -217,44 +313,256 @@ function Automation.CreateAdvancedSection(window, flags)
             automationState.autoequiprod = value
             if value then
                 Automation.EquipBestRod()
+                Utils.CreateNotification("Auto Equip Rod enabled", 2)
+            else
+                Utils.CreateNotification("Auto Equip Rod disabled", 2)
             end
         end
     })
     
-    -- Fishing Stats
-    window:Section('📊 Fishing Statistics')
+    -- Fast Travel System
+    window:Section('� Travel & Boats')
     
-    -- Create stats display (would need to track these)
-    local statsText = "Fish Caught: 0\nTime Fishing: 0m\nAverage Cast Time: 0s"
+    window:Toggle('Auto Fast Travel', {
+        location = flags,
+        flag = 'autofasttravel',
+        default = false,
+        callback = function(value)
+            automationState.autofasttravel = value
+            if value then
+                Utils.CreateNotification("Auto Fast Travel enabled", 2)
+            else
+                Utils.CreateNotification("Auto Fast Travel disabled", 2)
+            end
+        end
+    })
     
-    -- Add a text label for stats (this would be updated in real-time)
-    -- This is a placeholder - you'd need to implement actual stat tracking
+    window:Button('Spawn Best Boat', function()
+        pcall(function()
+            ReplicatedStorage.packages.Net.RF["Boats/Spawn"]:InvokeServer("FastBoat") -- Adjust boat name as needed
+            Utils.CreateNotification("🚢 Boat spawned!", 2)
+        end)
+    end)
+    
+    -- Auto Item Management
+    window:Section('📦 Item Management')
+    
+    window:Toggle('Auto Organize Inventory', {
+        location = flags,
+        flag = 'autoorganize',
+        default = false,
+        callback = function(value)
+            automationState.autoorganize = value
+            if value then
+                Utils.CreateNotification("Auto Organize enabled", 2)
+            else
+                Utils.CreateNotification("Auto Organize disabled", 2)
+            end
+        end
+    })
+    
+    window:Slider('Auto Sell Interval (seconds)', {
+        location = flags,
+        flag = 'autosellinterval',
+        min = 5,
+        max = 120,
+        default = 30,
+        callback = function(value)
+            automationState.autosellinterval = value
+        end
+    })
+    
+    -- Enhanced Currency System
+    window:Section('💎 Currency & Economy')
+    
+    window:Button('Get Currency Info', function()
+        pcall(function()
+            ReplicatedStorage.events.getcurrency:FireServer()
+            Utils.CreateNotification("💰 Currency info requested", 2)
+        end)
+    end)
+    
+    window:Toggle('Auto Buy Upgrades', {
+        location = flags,
+        flag = 'autobuyupgrades',
+        default = false,
+        callback = function(value)
+            automationState.autobuyupgrades = value
+            if value then
+                Utils.CreateNotification("Auto Buy Upgrades enabled", 2)
+            else
+                Utils.CreateNotification("Auto Buy Upgrades disabled", 2)
+            end
+        end
+    })
+    
+    -- Fishing Stats Enhanced
+    window:Section('📊 Enhanced Statistics')
+    
+    local statsText = "Fish Caught: " .. (automationState.fishCaught or 0) .. 
+                     "\nTime Fishing: " .. (automationState.timeFishing or 0) .. "m" ..
+                     "\nCasts Made: " .. (automationState.castsMade or 0) ..
+                     "\nSuccess Rate: " .. (automationState.successRate or 0) .. "%"
+    
+    window:Button('Reset Statistics', function()
+        automationState.fishCaught = 0
+        automationState.timeFishing = 0
+        automationState.castsMade = 0
+        automationState.successRate = 0
+        Utils.CreateNotification("📊 Statistics reset!", 2)
+    end)
 end
 
--- Auto sell functionality
+-- Auto sell functionality (Enhanced)
 function Automation.StartAutoSell()
     if connections.autoSell then
         connections.autoSell:Disconnect()
     end
     
-    connections.autoSell = RunService.Heartbeat:Connect(function()
-        -- Check if inventory is full or has fish to sell
-        -- This would need to be implemented based on the game's inventory system
-        -- Placeholder logic
-        local shouldSell = false -- Replace with actual inventory check
-        
-        if shouldSell then
-            -- Teleport to merchant and sell
-            -- This would need to be implemented based on the game's selling system
+    connections.autoSell = task.spawn(function()
+        while automationState.autosell do
+            task.wait(automationState.autosellinterval or 30)
+            
+            pcall(function()
+                -- Try multiple sell methods for better compatibility
+                if ReplicatedStorage.events:FindFirstChild("selleverything") then
+                    ReplicatedStorage.events.selleverything:InvokeServer()
+                elseif ReplicatedStorage.events:FindFirstChild("SellAll") then
+                    ReplicatedStorage.events.SellAll:InvokeServer()
+                end
+                
+                Utils.CreateNotification("💰 Auto-sold items", 1)
+            end)
         end
     end)
 end
 
 function Automation.StopAutoSell()
     if connections.autoSell then
-        connections.autoSell:Disconnect()
+        task.cancel(connections.autoSell)
         connections.autoSell = nil
     end
+end
+
+-- Anti-AFK System
+function Automation.StartAntiAFK()
+    if connections.antiAFK then
+        connections.antiAFK:Disconnect()
+    end
+    
+    connections.antiAFK = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            if ReplicatedStorage.events:FindFirstChild("afk") then
+                ReplicatedStorage.events.afk:FireServer(false)
+            end
+        end)
+    end)
+end
+
+function Automation.StopAntiAFK()
+    if connections.antiAFK then
+        connections.antiAFK:Disconnect()
+        connections.antiAFK = nil
+    end
+end
+
+-- Enhanced Auto Equipment System
+function Automation.AutoEquipBait()
+    pcall(function()
+        local bestBait = Automation.FindBestBait()
+        if bestBait then
+            ReplicatedStorage.packages.Net.RE["Bait/Equip"]:FireServer(bestBait)
+            Utils.CreateNotification("🪱 Equipped " .. bestBait, 2)
+        end
+    end)
+end
+
+function Automation.FindBestBait()
+    local backpack = LocalPlayer.Backpack
+    if not backpack then return nil end
+    
+    -- Define bait priorities (best to worst)
+    local baitPriorities = {
+        "Mythical Bait",
+        "Legendary Bait", 
+        "Epic Bait",
+        "Rare Bait",
+        "Uncommon Bait",
+        "Common Bait",
+        "Worm"
+    }
+    
+    for _, baitName in ipairs(baitPriorities) do
+        local bait = backpack:FindFirstChild(baitName)
+        if bait then
+            return baitName
+        end
+    end
+    
+    return nil
+end
+
+-- Enhanced Auto Fishing with new remotes
+function Automation.EnhancedAutoFishing()
+    local rod = Utils.FindRod()
+    if not rod then return end
+    
+    -- Use the discovered remotes for better automation
+    pcall(function()
+        -- Toggle native auto fishing if available
+        if ReplicatedStorage.packages.Net.RE:FindFirstChild("AutoFishing/Toggle") then
+            ReplicatedStorage.packages.Net.RE["AutoFishing/Toggle"]:FireServer(true)
+        end
+        
+        -- Enhanced casting with new remotes
+        if rod.values.lure.Value <= 0.001 then
+            if ReplicatedStorage.shared.modules.fishing.rodresources.events:FindFirstChild("cast") then
+                ReplicatedStorage.shared.modules.fishing.rodresources.events.cast:FireServer(100, 1)
+            else
+                rod.events.cast:FireServer(100, 1)
+            end
+            
+            -- Update statistics
+            automationState.castsMade = (automationState.castsMade or 0) + 1
+        end
+        
+        -- Enhanced reeling
+        if rod.values.lure.Value == 100 then
+            if ReplicatedStorage.events:FindFirstChild("reelfinished") then
+                ReplicatedStorage.events.reelfinished:FireServer(100, true)
+                automationState.fishCaught = (automationState.fishCaught or 0) + 1
+            end
+        end
+    end)
+end
+
+-- Auto Currency Management
+function Automation.AutoCurrencyManagement()
+    if not automationState.autobuyupgrades then return end
+    
+    pcall(function()
+        -- Get current currency
+        ReplicatedStorage.events.getcurrency:FireServer()
+        
+        -- Auto buy useful upgrades (placeholder logic)
+        -- This would need to be customized based on available upgrades
+        -- Example: Auto buy rod upgrades, bait, etc.
+    end)
+end
+
+-- Fast Travel Automation
+function Automation.AutoFastTravel(destination)
+    pcall(function()
+        if ReplicatedStorage.packages.Net.RE:FindFirstChild("FastTravel/ToggleUI") then
+            ReplicatedStorage.packages.Net.RE["FastTravel/ToggleUI"]:FireServer()
+        end
+        
+        -- Use sea traveler for specific destinations
+        if workspace:FindFirstChild("Sea Traveler") and 
+           workspace["Sea Traveler"]:FindFirstChild("seatraveler") then
+            workspace["Sea Traveler"].seatraveler.teleport:InvokeServer(destination)
+        end
+    end)
 end
 
 -- Rod management

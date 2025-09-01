@@ -15,7 +15,7 @@ local Players = game:GetService('Players')
 -- Create teleport functions for UI
 function Teleports.CreateTeleportSection(window)
     -- Teleports Section
-    window:Section('🌍 Teleportation')
+    window:Section('🌍 Zone Teleportation')
     
     -- Zone Teleports
     local zoneDropdown = window:Dropdown('Zone Teleports', {
@@ -41,7 +41,59 @@ function Teleports.CreateTeleportSection(window)
         end
     end)
     
+    -- Enhanced Fast Travel System
+    window:Section('🚢 Fast Travel & NPCs')
+    
+    window:Button('Use Sea Traveler', function()
+        pcall(function()
+            if workspace:FindFirstChild("Sea Traveler") and 
+               workspace["Sea Traveler"]:FindFirstChild("seatraveler") then
+                -- Open sea traveler menu
+                workspace["Sea Traveler"].seatraveler.teleport:InvokeServer()
+                Utils.CreateNotification("🚢 Sea Traveler opened", 2)
+            else
+                Utils.CreateNotification("❌ Sea Traveler not found", 2)
+            end
+        end)
+    end)
+    
+    window:Button('Toggle Fast Travel UI', function()
+        pcall(function()
+            game:GetService("ReplicatedStorage").packages.Net.RE["FastTravel/ToggleUI"]:FireServer()
+            Utils.CreateNotification("🌟 Fast Travel UI toggled", 2)
+        end)
+    end)
+    
+    -- NPC Teleports
+    window:Section('👥 NPC Locations')
+    
+    local npcDropdown = window:Dropdown('Teleport to NPC', {
+        list = {
+            "Pierre (Quests)",
+            "Phineas (Quests)", 
+            "Moosewood Angler",
+            "Moosewood Shipwright",
+            "Lantern Keeper",
+            "Mods Lantern Keeper",
+            "Dr Glimmerfin",
+            "Captain Ahab"
+        },
+        callback = function(selected)
+            Teleports.selectedNPC = selected
+        end
+    })
+    
+    window:Button('Teleport to NPC', function()
+        if Teleports.selectedNPC then
+            Teleports.TeleportToNPC(Teleports.selectedNPC)
+        else
+            Utils.CreateNotification("Please select an NPC first", 3)
+        end
+    end)
+    
     -- Rod Teleports
+    window:Section('🎣 Rod Locations')
+    
     local rodDropdown = window:Dropdown('Rod Locations', {
         list = Locations.GetRodNames(),
         callback = function(selected)
@@ -175,7 +227,97 @@ function Teleports.TeleportToRod(rodName)
 end
 
 function Teleports.TeleportToNPC(npcName)
-    local cframe = Locations.TeleportLocations.NPCs[npcName]
+    -- NPC location mappings (you may need to adjust these coordinates)
+    local npcLocations = {
+        ["Pierre (Quests)"] = CFrame.new(379.875, 134.5, 233.5),
+        ["Phineas (Quests)"] = CFrame.new(400.2, 134.5, 280.8),
+        ["Moosewood Angler"] = CFrame.new(390.1, 134.5, 250.3),
+        ["Moosewood Shipwright"] = CFrame.new(360.5, 134.5, 220.7),
+        ["Lantern Keeper"] = CFrame.new(410.3, 134.5, 190.4),
+        ["Mods Lantern Keeper"] = CFrame.new(420.8, 134.5, 200.1),
+        ["Dr Glimmerfin"] = CFrame.new(-1805.02, -143.47, 1563.37),
+        ["Captain Ahab"] = CFrame.new(-1550.23, -138.45, 1380.21)
+    }
+    
+    local cframe = npcLocations[npcName]
+    if cframe then
+        if Utils.TeleportTo(cframe) then
+            Utils.CreateNotification("Teleported to " .. npcName, 3)
+            return true
+        else
+            Utils.CreateNotification("Failed to teleport to " .. npcName, 3)
+            return false
+        end
+    else
+        -- Try to find NPC in workspace
+        pcall(function()
+            local npcFound = false
+            for _, npc in pairs(workspace:GetDescendants()) do
+                if npc.Name:lower():find(npcName:lower():gsub(" .*", "")) then
+                    if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+                        local npcCFrame = npc.HumanoidRootPart.CFrame + Vector3.new(0, 0, 5)
+                        if Utils.TeleportTo(npcCFrame) then
+                            Utils.CreateNotification("Teleported to " .. npcName, 3)
+                            npcFound = true
+                            break
+                        end
+                    end
+                end
+            end
+            
+            if not npcFound then
+                Utils.CreateNotification("NPC " .. npcName .. " not found", 3)
+            end
+        end)
+        return false
+    end
+end
+
+-- Enhanced teleportation with door interactions
+function Teleports.TeleportWithDoor(location)
+    pcall(function()
+        -- Check for door interactions (from remote dump)
+        if workspace.world.map:FindFirstChild("Executive Headquarters") then
+            local door = workspace.world.map["Executive Headquarters"].Model.TopDoor
+            if door and door:FindFirstChild("Interacted") then
+                door.Interacted:FireServer()
+            end
+        end
+        
+        -- Use door remote if available
+        if game:GetService("ReplicatedStorage").packages.Net.RE:FindFirstChild("DoorRemote") then
+            game:GetService("ReplicatedStorage").packages.Net.RE.DoorRemote:FireServer()
+        end
+    end)
+end
+
+-- Auto travel to best fishing zones
+function Teleports.AutoTravelToBestZone()
+    local bestZones = {
+        {name = "The Depths", abundance = "High", rarity = "Legendary"},
+        {name = "Ancient Isle", abundance = "Medium", rarity = "Mythical"},
+        {name = "Vertigo", abundance = "High", rarity = "Rare"},
+        {name = "Roslit Bay", abundance = "High", rarity = "Common"}
+    }
+    
+    -- Select based on current goals (this could be made configurable)
+    local targetZone = bestZones[1] -- Default to The Depths
+    
+    if Teleports.TeleportToZone(targetZone.name) then
+        Utils.CreateNotification("🎣 Traveled to " .. targetZone.name .. " for " .. targetZone.rarity .. " fish!", 3)
+        return true
+    end
+    
+    return false
+end
+
+-- Return to surface function
+function Teleports.ReturnToSurface()
+    pcall(function()
+        game:GetService("ReplicatedStorage").packages.Net.RE.ReturnToSurface:FireServer()
+        Utils.CreateNotification("🌊 Returning to surface...", 2)
+    end)
+end
     if cframe then
         return Utils.TeleportTo(cframe)
     end
