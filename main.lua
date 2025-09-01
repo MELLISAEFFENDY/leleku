@@ -11,11 +11,68 @@
     - Game modifications
 ]]--
 
--- Load modules
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/ui/library.lua'))()
-local Automation = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/automation.lua'))()
-local Teleports = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/teleports.lua'))()
-local Utils = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/utils/functions.lua'))()
+print("🎣 Loading Lele Fishing Script...")
+
+-- Load modules with error handling
+local Library, Automation, Teleports, Utils
+
+-- Load Library
+print("📚 Loading UI Library...")
+local success, result = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/ui/library.lua'))()
+end)
+
+if success and result then
+    Library = result
+    print("✅ UI Library loaded successfully")
+else
+    warn("❌ Failed to load UI Library:", tostring(result))
+    return
+end
+
+-- Load Automation
+print("🤖 Loading Automation Module...")
+success, result = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/automation.lua'))()
+end)
+
+if success and result then
+    Automation = result
+    print("✅ Automation Module loaded successfully")
+else
+    warn("❌ Failed to load Automation Module:", tostring(result))
+    return
+end
+
+-- Load Teleports
+print("🌍 Loading Teleports Module...")
+success, result = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/teleports.lua'))()
+end)
+
+if success and result then
+    Teleports = result
+    print("✅ Teleports Module loaded successfully")
+else
+    warn("❌ Failed to load Teleports Module:", tostring(result))
+    return
+end
+
+-- Load Utils
+print("🔧 Loading Utility Functions...")
+success, result = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/utils/functions.lua'))()
+end)
+
+if success and result then
+    Utils = result
+    print("✅ Utility Functions loaded successfully")
+else
+    warn("❌ Failed to load Utility Functions:", tostring(result))
+    return
+end
+
+print("🚀 All modules loaded successfully! Initializing UI...")
 
 -- For local development, use these instead:
 --[[
