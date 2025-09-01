@@ -7,6 +7,16 @@
     - Floating button system
 ]]--
 
+-- Safety wrapper for the entire library
+local function safeExecute(func, ...)
+    local success, result = pcall(func, ...)
+    if not success then
+        warn("TabbedLibrary Error:", result)
+        return nil
+    end
+    return result
+end
+
 local TabbedLibrary = {}
 
 -- Services
@@ -15,7 +25,18 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local PlayerGui = Player:WaitForChild("PlayerGui", 10) -- Add timeout
+
+-- Safety check for PlayerGui
+if not PlayerGui then
+    warn("PlayerGui not found, creating fallback")
+    PlayerGui = Player:FindFirstChild("PlayerGui") or Instance.new("ScreenGui")
+    if PlayerGui.ClassName ~= "PlayerGui" then
+        local newPlayerGui = Instance.new("ScreenGui")
+        newPlayerGui.Parent = Player
+        PlayerGui = newPlayerGui
+    end
+end
 
 -- Theme
 local Theme = {
@@ -49,9 +70,9 @@ local Theme = {
         BorderRadius = 6
     },
     Fonts = {
-        Primary = Enum.Font.GothamMedium,
-        Secondary = Enum.Font.Gotham,
-        Bold = Enum.Font.GothamBold
+        Primary = Enum.Font.SourceSans,
+        Secondary = Enum.Font.SourceSans,
+        Bold = Enum.Font.SourceSansBold
     },
     Animations = {
         Speed = 0.25,
@@ -73,13 +94,32 @@ local LibraryState = {
 
 -- Helper function to create tween
 local function createTween(object, properties, duration)
-    duration = duration or Theme.Animations.Speed
-    local tweenInfo = TweenInfo.new(
-        duration,
-        Theme.Animations.EasingStyle,
-        Theme.Animations.EasingDirection
-    )
-    return TweenService:Create(object, tweenInfo, properties)
+    if not object or not properties then return nil end
+    
+    local success, result = pcall(function()
+        duration = duration or Theme.Animations.Speed
+        local tweenInfo = TweenInfo.new(
+            duration,
+            Theme.Animations.EasingStyle,
+            Theme.Animations.EasingDirection
+        )
+        return TweenService:Create(object, tweenInfo, properties)
+    end)
+    
+    if success then
+        return result
+    else
+        warn("Failed to create tween:", result)
+        return nil
+    end
+end
+
+-- Safe tween play function
+local function safeTweenPlay(object, properties, duration)
+    local tween = createTween(object, properties, duration)
+    if tween then
+        pcall(function() tween:Play() end)
+    end
 end
 
 -- Create floating button
