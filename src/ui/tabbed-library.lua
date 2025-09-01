@@ -64,6 +64,7 @@ local Theme = {
 local LibraryState = {
     MainWindow = nil,
     FloatingButton = nil,
+    FloatingButtonGui = nil,
     IsVisible = true,
     CurrentTab = nil,
     Tabs = {},
@@ -87,13 +88,22 @@ local function createFloatingButton()
         LibraryState.FloatingButton:Destroy()
     end
     
+    -- Create dedicated ScreenGui for floating button
+    local floatingGui = Instance.new("ScreenGui")
+    floatingGui.Name = "FloatingButtonGui"
+    floatingGui.Parent = PlayerGui
+    floatingGui.ResetOnSpawn = false
+    floatingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    floatingGui.DisplayOrder = 999 -- Ensure it's on top
+    
     local floatingFrame = Instance.new("Frame")
     floatingFrame.Name = "FloatingButton"
     floatingFrame.Size = UDim2.new(0, 60, 0, 60)
     floatingFrame.Position = UDim2.new(1, -80, 0, 20)
     floatingFrame.BackgroundColor3 = Theme.Colors.Primary
     floatingFrame.BorderSizePixel = 0
-    floatingFrame.Parent = PlayerGui
+    floatingFrame.Visible = false -- Start hidden
+    floatingFrame.Parent = floatingGui
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 30)
@@ -120,10 +130,11 @@ local function createFloatingButton()
     end)
     
     button.MouseButton1Click:Connect(function()
-        TabbedLibrary:Toggle()
+        TabbedLibrary:Show()
     end)
     
     LibraryState.FloatingButton = floatingFrame
+    LibraryState.FloatingButtonGui = floatingGui
     return floatingFrame
 end
 
@@ -255,6 +266,10 @@ local function createMainWindow()
     contentContainer.BackgroundColor3 = Theme.Colors.Surface
     contentContainer.BorderSizePixel = 0
     contentContainer.Parent = mainFrame
+    
+    local contentCorner = Instance.new("UICorner")
+    contentCorner.CornerRadius = UDim.new(0, Theme.Sizes.BorderRadius)
+    contentCorner.Parent = contentContainer
     
     -- Make window draggable
     local dragging = false
@@ -576,20 +591,35 @@ function TabbedLibrary:SelectTab(name)
     -- Hide all tabs
     for tabName, tabFrame in pairs(LibraryState.TabFrames) do
         tabFrame.Visible = false
-        local tabButton = LibraryState.Tabs[tabName].Button
-        createTween(tabButton, {
-            BackgroundColor3 = Theme.Colors.Surface,
-            TextColor3 = Theme.Colors.TextSecondary
-        }):Play()
+        local tabButton = LibraryState.Tabs[tabName] and LibraryState.Tabs[tabName].Button
+        if tabButton then
+            createTween(tabButton, {
+                BackgroundColor3 = Theme.Colors.Surface,
+                TextColor3 = Theme.Colors.TextSecondary
+            }):Play()
+        end
     end
     
-    -- Show selected tab
-    LibraryState.TabFrames[name].Visible = true
-    local selectedButton = LibraryState.Tabs[name].Button
-    createTween(selectedButton, {
-        BackgroundColor3 = Theme.Colors.TabSelected,
-        TextColor3 = Theme.Colors.TextPrimary
-    }):Play()
+    -- Show selected tab with proper sizing and positioning
+    local selectedFrame = LibraryState.TabFrames[name]
+    selectedFrame.Visible = true
+    selectedFrame.Size = UDim2.new(1, 0, 1, 0)
+    selectedFrame.Position = UDim2.new(0, 0, 0, 0)
+    
+    -- Update scroll canvas size
+    wait(0.1) -- Wait for UI to update
+    local contentLayout = selectedFrame:FindFirstChild("UIListLayout")
+    if contentLayout then
+        selectedFrame.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + Theme.Sizes.Padding * 2)
+    end
+    
+    local selectedButton = LibraryState.Tabs[name] and LibraryState.Tabs[name].Button
+    if selectedButton then
+        createTween(selectedButton, {
+            BackgroundColor3 = Theme.Colors.TabSelected,
+            TextColor3 = Theme.Colors.TextPrimary
+        }):Play()
+    end
     
     LibraryState.CurrentTab = name
 end
@@ -645,13 +675,14 @@ function TabbedLibrary:Destroy()
     if LibraryState.MainWindow then
         LibraryState.MainWindow:Destroy()
     end
-    if LibraryState.FloatingButton then
-        LibraryState.FloatingButton:Destroy()
+    if LibraryState.FloatingButtonGui then
+        LibraryState.FloatingButtonGui:Destroy()
     end
     
     LibraryState = {
         MainWindow = nil,
         FloatingButton = nil,
+        FloatingButtonGui = nil,
         IsVisible = true,
         CurrentTab = nil,
         Tabs = {},
