@@ -123,9 +123,14 @@ Utils.CreateNotification("🎣 Modern Tabbed Fishing Script Loaded!", 5)
 Utils.CreateNotification("Press the floating button to open/close UI", 3)
 
 -- Create main window
+print("🎣 Creating main window...")
 local Window = TabbedLibrary:CreateWindow("Modern Fishing Script")
 
+-- Wait for window to be properly initialized
+wait(0.5)
+
 -- Create tabs
+print("📁 Creating tabs...")
 local AutomationTab = TabbedLibrary:CreateTab("Automation", "🤖")
 local ExploitsTab = TabbedLibrary:CreateTab("Exploits", "🎯")
 local TeleportsTab = TabbedLibrary:CreateTab("Teleports", "🌍")
