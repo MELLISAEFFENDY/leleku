@@ -92,7 +92,26 @@ else
     print("⚠️ Using limited Utils fallback")
 end
 
-print("🚀 All modules loaded successfully! Initializing Tabbed UI...")
+-- Load Advanced Exploits
+print("🎯 Loading Advanced Exploits Module...")
+local AdvancedExploits
+success, result = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/advanced-exploits.lua'))()
+end)
+
+if success and result then
+    AdvancedExploits = result
+    print("✅ Advanced Exploits Module loaded successfully")
+else
+    warn("❌ Failed to load Advanced Exploits Module:", tostring(result))
+    AdvancedExploits = {
+        CreateAdvancedExploits = function(tab, flags)
+            tab:Section('🎯 Advanced Exploits (Limited)')
+            tab:Label('Advanced exploits module failed to load')
+        end
+    }
+    print("⚠️ Using limited Advanced Exploits fallback")
+end
 
 -- Initialize services
 local Players = game:GetService('Players')
@@ -108,6 +127,7 @@ local Window = TabbedLibrary:CreateWindow("Modern Fishing Script")
 
 -- Create tabs
 local AutomationTab = TabbedLibrary:CreateTab("Automation", "🤖")
+local ExploitsTab = TabbedLibrary:CreateTab("Exploits", "🎯")
 local TeleportsTab = TabbedLibrary:CreateTab("Teleports", "🌍")
 local ModificationsTab = TabbedLibrary:CreateTab("Modifications", "⚙️")
 local VisualsTab = TabbedLibrary:CreateTab("Visuals", "👁️")
@@ -117,6 +137,12 @@ local SettingsTab = TabbedLibrary:CreateTab("Settings", "🔧")
 pcall(function()
     Automation.CreateAutomationSection(AutomationTab, flags)
     Automation.CreateAdvancedSection(AutomationTab, flags)
+end)
+
+-- Setup Exploits Tab
+pcall(function()
+    AdvancedExploits.CreateAdvancedExploits(ExploitsTab, flags)
+    AdvancedExploits.SetupHooks(flags)
 end)
 
 -- Setup Teleports Tab
