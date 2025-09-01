@@ -69,6 +69,12 @@ else
         GetRodNames = function()
             return {"Training Rod", "Plastic Rod", "Lucky Rod", "Carbon Rod", "Long Rod"}
         end,
+        GetNPCNames = function()
+            return {"Merchant", "Fisherman Pete", "Rod Vendor", "Bait Vendor"}
+        end,
+        GetItemNames = function()
+            return {"Treasure Chest", "Coral", "Seaweed", "Trash Pile"}
+        end,
         TeleportLocations = {
             Zones = {
                 ["Roslit Bay"] = CFrame.new(379.875, 134.5, 233.5),
@@ -77,9 +83,25 @@ else
                 ["Vertigo"] = CFrame.new(-113.66, -511.86, 1061.31),
                 ["Snowcap Island"] = CFrame.new(2648.83, 139.85, 2522.86)
             },
-            Rods = {},
-            NPCs = {},
-            Items = {}
+            Rods = {
+                ["Training Rod"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Plastic Rod"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Lucky Rod"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Carbon Rod"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Long Rod"] = CFrame.new(379.875, 134.5, 233.5)
+            },
+            NPCs = {
+                ["Merchant"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Fisherman Pete"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Rod Vendor"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Bait Vendor"] = CFrame.new(379.875, 134.5, 233.5)
+            },
+            Items = {
+                ["Treasure Chest"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Coral"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Seaweed"] = CFrame.new(379.875, 134.5, 233.5),
+                ["Trash Pile"] = CFrame.new(379.875, 134.5, 233.5)
+            }
         }
     }
 end

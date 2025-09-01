@@ -502,6 +502,12 @@ end
 function TabbedLibrary:CreateTab(name, icon)
     icon = icon or "📁"
     
+    -- Ensure window is created first
+    if not LibraryState.TabContainer or not LibraryState.ContentContainer then
+        warn("Window must be created before creating tabs")
+        return nil
+    end
+    
     -- Create tab button
     local tabButton = Instance.new("TextButton")
     tabButton.Name = "Tab_" .. name
@@ -542,7 +548,10 @@ function TabbedLibrary:CreateTab(name, icon)
     contentLayout.Parent = tabContent
     
     local contentPadding = Instance.new("UIPadding")
-    contentPadding.PaddingAll = UDim.new(0, Theme.Sizes.Padding)
+    contentPadding.PaddingTop = UDim.new(0, Theme.Sizes.Padding)
+    contentPadding.PaddingBottom = UDim.new(0, Theme.Sizes.Padding)
+    contentPadding.PaddingLeft = UDim.new(0, Theme.Sizes.Padding)
+    contentPadding.PaddingRight = UDim.new(0, Theme.Sizes.Padding)
     contentPadding.Parent = tabContent
     
     -- Auto-resize canvas
