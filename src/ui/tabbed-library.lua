@@ -334,7 +334,7 @@ function Tab:Toggle(name, options)
     
     local toggleFrame = Instance.new("Frame")
     toggleFrame.Name = "Toggle_" .. name
-    toggleFrame.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight)
+    toggleFrame.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight + 8)
     toggleFrame.BackgroundColor3 = Theme.Colors.SurfaceLight
     toggleFrame.BorderSizePixel = 0
     toggleFrame.Parent = self.ContentFrame
@@ -344,7 +344,7 @@ function Tab:Toggle(name, options)
     toggleCorner.Parent = toggleFrame
     
     local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(1, -60, 1, 0)
+    toggleLabel.Size = UDim2.new(1, -80, 1, 0)
     toggleLabel.Position = UDim2.new(0, Theme.Sizes.Padding, 0, 0)
     toggleLabel.BackgroundTransparency = 1
     toggleLabel.Text = name
@@ -355,14 +355,64 @@ function Tab:Toggle(name, options)
     toggleLabel.Parent = toggleFrame
     
     local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, 40, 0, 20)
-    toggleButton.Position = UDim2.new(1, -45, 0.5, -10)
+    toggleButton.Size = UDim2.new(0, 50, 0, 25)
+    toggleButton.Position = UDim2.new(1, -60, 0.5, -12)
     toggleButton.BackgroundColor3 = options.default and Theme.Colors.Success or Theme.Colors.Border
     toggleButton.Text = options.default and "ON" or "OFF"
     toggleButton.TextColor3 = Theme.Colors.TextPrimary
     toggleButton.TextSize = 10
     toggleButton.Font = Theme.Fonts.Bold
     toggleButton.BorderSizePixel = 0
+    toggleButton.Parent = toggleFrame
+    
+    local toggleButtonCorner = Instance.new("UICorner")
+    toggleButtonCorner.CornerRadius = UDim.new(0, 4)
+    toggleButtonCorner.Parent = toggleButton
+    
+    local currentValue = options.default or false
+    
+    -- Store in flags if provided
+    if options.location and options.flag then
+        options.location[options.flag] = currentValue
+    end
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        currentValue = not currentValue
+        
+        -- Update UI
+        toggleButton.Text = currentValue and "ON" or "OFF"
+        createTween(toggleButton, {
+            BackgroundColor3 = currentValue and Theme.Colors.Success or Theme.Colors.Border
+        }):Play()
+        
+        -- Store in flags if provided
+        if options.location and options.flag then
+            options.location[options.flag] = currentValue
+        end
+        
+        -- Execute callback
+        if options.callback then
+            options.callback(currentValue)
+        end
+    end)
+    
+    -- Hover effects
+    toggleButton.MouseEnter:Connect(function()
+        createTween(toggleButton, {
+            BackgroundColor3 = currentValue and 
+                Color3.fromRGB(57, 151, 99) or 
+                Color3.fromRGB(60, 60, 65)
+        }):Play()
+    end)
+    
+    toggleButton.MouseLeave:Connect(function()
+        createTween(toggleButton, {
+            BackgroundColor3 = currentValue and Theme.Colors.Success or Theme.Colors.Border
+        }):Play()
+    end)
+    
+    return self
+end
     toggleButton.Parent = toggleFrame
     
     local buttonCorner = Instance.new("UICorner")
@@ -443,10 +493,12 @@ end
 
 function Tab:Dropdown(name, options)
     options = options or {}
+    local list = options.list or {"Option 1", "Option 2"}
+    local currentSelection = list[1]
     
     local dropdownFrame = Instance.new("Frame")
     dropdownFrame.Name = "Dropdown_" .. name
-    dropdownFrame.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight)
+    dropdownFrame.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight + 8)
     dropdownFrame.BackgroundColor3 = Theme.Colors.SurfaceLight
     dropdownFrame.BorderSizePixel = 0
     dropdownFrame.Parent = self.ContentFrame
@@ -458,7 +510,7 @@ function Tab:Dropdown(name, options)
     local dropdownButton = Instance.new("TextButton")
     dropdownButton.Size = UDim2.new(1, 0, 1, 0)
     dropdownButton.BackgroundTransparency = 1
-    dropdownButton.Text = name .. ": " .. (options.list and options.list[1] or "None")
+    dropdownButton.Text = name .. ": " .. currentSelection
     dropdownButton.TextColor3 = Theme.Colors.TextPrimary
     dropdownButton.TextSize = 12
     dropdownButton.Font = Theme.Fonts.Primary
@@ -467,7 +519,54 @@ function Tab:Dropdown(name, options)
     
     local dropdownPadding = Instance.new("UIPadding")
     dropdownPadding.PaddingLeft = UDim.new(0, Theme.Sizes.Padding)
+    dropdownPadding.PaddingRight = UDim.new(0, Theme.Sizes.Padding)
     dropdownPadding.Parent = dropdownButton
+    
+    local dropdownIcon = Instance.new("TextLabel")
+    dropdownIcon.Size = UDim2.new(0, 20, 1, 0)
+    dropdownIcon.Position = UDim2.new(1, -25, 0, 0)
+    dropdownIcon.BackgroundTransparency = 1
+    dropdownIcon.Text = "▼"
+    dropdownIcon.TextColor3 = Theme.Colors.TextSecondary
+    dropdownIcon.TextSize = 10
+    dropdownIcon.Font = Theme.Fonts.Primary
+    dropdownIcon.TextXAlignment = Enum.TextXAlignment.Center
+    dropdownIcon.Parent = dropdownButton
+    
+    -- Simple click cycling through options
+    dropdownButton.MouseButton1Click:Connect(function()
+        local currentIndex = 1
+        for i, item in ipairs(list) do
+            if item == currentSelection then
+                currentIndex = i
+                break
+            end
+        end
+        
+        local nextIndex = currentIndex + 1
+        if nextIndex > #list then
+            nextIndex = 1
+        end
+        
+        currentSelection = list[nextIndex]
+        dropdownButton.Text = name .. ": " .. currentSelection
+        
+        if options.callback then
+            options.callback(currentSelection)
+        end
+    end)
+    
+    -- Hover effects
+    dropdownButton.MouseEnter:Connect(function()
+        createTween(dropdownFrame, {BackgroundColor3 = Theme.Colors.Hover}):Play()
+    end)
+    
+    dropdownButton.MouseLeave:Connect(function()
+        createTween(dropdownFrame, {BackgroundColor3 = Theme.Colors.SurfaceLight}):Play()
+    end)
+    
+    return self
+end
     
     if options.list then
         local currentIndex = 1
