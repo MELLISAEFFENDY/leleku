@@ -1,14 +1,30 @@
--- Simple test script to verify loading works
-print("🎣 Loading Lele Fishing Script...")
+-- Enhanced test script untuk verifikasi loading
+print("🧪 Enhanced Testing Lele Fishing Script...")
+print("=" .. string.rep("=", 50))
 
--- Test loading main script
+-- Test loading main script with detailed error reporting
 local success, result = pcall(function()
     return loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/main.lua'))()
 end)
 
 if success then
     print("✅ Script loaded successfully!")
+    print("🎉 All modules should be loaded now")
+    print("📝 Check the output above for any warnings")
+    
+    -- Give some usage instructions
+    print("\n" .. string.rep("=", 50))
+    print("🎮 USAGE INSTRUCTIONS:")
+    print("• Look for the floating button in the top-right corner")
+    print("• Click it to open/close the GUI")
+    print("• Enable Auto Cast for automatic fishing")
+    print("• Use teleport features to move between zones")
+    print("=" .. string.rep("=", 50))
 else
-    print("❌ Error loading script:")
-    print(tostring(result))
+    print("❌ Script failed to load:")
+    print("🔴 Error Details:", tostring(result))
+    print("\n🔧 Troubleshooting:")
+    print("• Make sure you're in the Fisch game")
+    print("• Check your internet connection")
+    print("• Try running the script again")
 end
