@@ -12,10 +12,10 @@
 ]]--
 
 -- Load modules
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_REPO/main/src/ui/library.lua'))()
-local Automation = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_REPO/main/src/modules/automation.lua'))()
-local Teleports = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_REPO/main/src/modules/teleports.lua'))()
-local Utils = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOUR_REPO/main/src/utils/functions.lua'))()
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/ui/library.lua'))()
+local Automation = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/automation.lua'))()
+local Teleports = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/modules/teleports.lua'))()
+local Utils = loadstring(game:HttpGet('https://raw.githubusercontent.com/MELLISAEFFENDY/leleku/master/src/utils/functions.lua'))()
 
 -- For local development, use these instead:
 --[[
